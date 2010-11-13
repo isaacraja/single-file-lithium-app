@@ -1,16 +1,7 @@
 <?php
-/* if you don't have a .htaccess
- * http://localhost/index.php?url=hello_world/index
- * else
+/* http://localhost/index.php?url=hello_world/index
  * http://localhost/hello_world/index
- * sample .htaccess content
- <IfModule mod_rewrite.c>
-	RewriteEngine On
-	RewriteCond %{REQUEST_FILENAME} !-d
-	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteCond %{REQUEST_FILENAME} !favicon.ico$
-	RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
-</IfModule>
+ * http://localhost/hello_world/add/2/3
  */
 use lithium\core\Libraries;
 use lithium\net\http\Router;
@@ -35,33 +26,21 @@ Router::connect('/{:controller}/{:action}/{:id:[0-9]+}.{:type}', array('id' => n
 Router::connect('/{:controller}/{:action}/{:id:[0-9]+}');
 Router::connect('/{:controller}/{:action}/{:args}');
 
-
 class HelloWorldController extends \lithium\action\Controller {
 
 	public function index() {
 		return "Hello World";
 	}
 
-	//TODO: use templates, views & media classes instead of string representation
 	public function add($first, $second) {
 		return (string)($first + $second);
 	}
-
-	//Dispatcher::_callable() expects classname to create controller object and invoke the action
-	public function __toString() {
-		return __CLASS__;
-	}
 }
 
-$controller_object = new HelloWorldController;
-
-//Filter __callable and pass the controller object instead of locating it in the controllers folder. Filters FTW.
-Dispatcher::applyFilter('_callable', function($self, $params, $chain) use($controller_object) {
-	$params['params']['controller'] = $controller_object;
-    return $chain->next($self, $params, $chain);
+//Filter __callable and return a new instance of the controller. Filters FTW.
+Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
+	return new HelloWorldController();
 });
 
 //GO!!
 echo Dispatcher::run(new Request());
-
-?>
